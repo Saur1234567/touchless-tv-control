@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+# Virtual Environment
+.venv/
+venv/
+# Environment
+.env
+# VS Code
+.vscode/
+# CPH
+.cph/
