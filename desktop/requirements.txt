@@ -1,0 +1,9 @@
+opencv-python>=4.8
+mediapipe>=0.10
+pyautogui>=0.9.54
+SpeechRecognition>=3.10
+pyaudio>=0.2.14
+pywin32>=306
+flask
+flask-cors
+requests

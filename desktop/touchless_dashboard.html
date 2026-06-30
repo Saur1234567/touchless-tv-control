@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Touchless TV — Live Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+         :root {
+            --bg: #080c10;
+            --bg2: #0d1117;
+            --bg3: #131920;
+            --border: rgba(255, 255, 255, 0.07);
+            --green: #00ff88;
+            --blue: #38bdf8;
+            --amber: #fbbf24;
+            --red: #f87171;
+            --muted: #4a5568;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        /* ── HEADER ── */
+        
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00ff8820, #38bdf820);
+            border: 1px solid var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .logo-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        
+        .logo-sub {
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 1px;
+            font-family: var(--mono);
+        }
+        
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            color: var(--text2);
+        }
+        
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .dot-green {
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse 1.4s infinite;
+        }
+        
+        .dot-red {
+            background: var(--red);
+        }
+        
+        .dot-amber {
+            background: var(--amber);
+            animation: pulse 1.4s infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1
+            }
+            50% {
+                opacity: .3
+            }
+        }
+        /* ── METRIC CARDS ── */
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .metric {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent, var(--muted));
+            opacity: 0.6;
+        }
+        
+        .metric .label {
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--text2);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .metric .val {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: var(--mono);
+            color: var(--accent, var(--text));
+            line-height: 1;
+        }
+        
+        .metric .sub {
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 6px;
+        }
+        
+        .metric.g {
+            --accent: var(--green);
+        }
+        
+        .metric.b {
+            --accent: var(--blue);
+        }
+        
+        .metric.a {
+            --accent: var(--amber);
+        }
+        
+        .metric.r {
+            --accent: var(--red);
+        }
+        /* ── CHART GRID ── */
+        
+        .charts {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        
+        .charts2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        
+        .card-title {
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .card-title span {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+        /* ── LOG ── */
+        
+        .log-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        
+        .log-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .log-title {
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        
+        .log-clear {
+            font-size: 11px;
+            color: var(--muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--mono);
+        }
+        
+        .log-clear:hover {
+            color: var(--text2);
+        }
+        
+        .log-list {
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .log-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        
+        .log-list::-webkit-scrollbar-thumb {
+            background: var(--muted);
+            border-radius: 99px;
+        }
+        
+        .log-item {
+            display: grid;
+            grid-template-columns: 64px 60px 1fr;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            background: var(--bg3);
+            font-family: var(--mono);
+            font-size: 11px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+        
+        .log-time {
+            color: var(--muted);
+        }
+        
+        .badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-g {
+            background: #00ff8815;
+            color: var(--green);
+            border: 1px solid #00ff8830;
+        }
+        
+        .badge-v {
+            background: #38bdf815;
+            color: var(--blue);
+            border: 1px solid #38bdf830;
+        }
+        
+        .log-msg {
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .log-msg b {
+            color: var(--amber);
+            font-weight: 500;
+        }
+        /* ── EMPTY STATE ── */
+        
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            color: var(--muted);
+            font-family: var(--mono);
+            font-size: 12px;
+            gap: 6px;
+        }
+        /* ── ERROR BANNER ── */
+        
+        #err-banner {
+            display: none;
+            background: #f8717115;
+            border: 1px solid #f8717130;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--red);
+            margin-bottom: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">📺</div>
+            <div>
+                <div class="logo-title">Touchless TV Control</div>
+                <div class="logo-sub">live dashboard · port 5000</div>
+            </div>
+        </div>
+        <div class="status-row">
+            <div class="status-pill">
+                <div class="dot dot-amber" id="conn-dot"></div>
+                <span id="conn-text">Connecting...</span>
+            </div>
+            <div class="status-pill" id="last-update-pill" style="display:none">
+                <span id="last-update">—</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="err-banner" id="err-banner">
+        ⚠ Flask server se connect nahi ho pa raha — Python file chalao aur refresh karo (http://127.0.0.1:5000)
+    </div>
+
+    <div class="metrics">
+        <div class="metric g">
+            <div class="label">Total Actions</div>
+            <div class="val" id="m-total">0</div>
+            <div class="sub">sabse start se</div>
+        </div>
+        <div class="metric b">
+            <div class="label">Gestures</div>
+            <div class="val" id="m-gest">0</div>
+            <div class="sub">haath se</div>
+        </div>
+        <div class="metric a">
+            <div class="label">Voice Cmds</div>
+            <div class="val" id="m-voice">0</div>
+            <div class="sub">awaaz se</div>
+        </div>
+        <div class="metric r">
+            <div class="label">Top Action</div>
+            <div class="val" id="m-top" style="font-size:14px; padding-top:6px;">—</div>
+            <div class="sub">sabse zyada</div>
+        </div>
+    </div>
+
+    <div class="charts">
+        <div class="card">
+            <div class="card-title">Actions over time <span id="rate-label">0/min</span></div>
+            <div style="position:relative; height:180px;">
+                <canvas id="timeChart" role="img" aria-label="Actions over time line chart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Gesture vs Voice</div>
+            <div style="position:relative; height:180px;">
+                <canvas id="splitChart" role="img" aria-label="Gesture vs voice donut chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts2">
+        <div class="card">
+            <div class="card-title">Gesture breakdown</div>
+            <div style="position:relative; height:160px;">
+                <canvas id="gestChart" role="img" aria-label="Gesture type breakdown bar chart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Top actions</div>
+            <div style="position:relative; height:160px;">
+                <canvas id="actionChart" role="img" aria-label="Top actions horizontal bar chart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Voice commands</div>
+            <div style="position:relative; height:160px;">
+                <canvas id="voiceChart" role="img" aria-label="Voice commands bar chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="log-card">
+        <div class="log-head">
+            <div class="log-title">
+                <span class="dot dot-green" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span> Live Event Log
+            </div>
+            <button class="log-clear" onclick="clearLog()">clear</button>
+        </div>
+        <div class="log-list" id="logList">
+            <div class="empty">
+                <span>⏳</span>
+                <span>Python app se events ka intezaar hai...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── STATE ────────────────────────────────────────────
+        let seenIds = new Set();
+        let gestCount = 0,
+            voiceCount = 0;
+        const actionFreq = {},
+            gestFreq = {},
+            voiceFreq = {};
+        const timeData = Array(20).fill(0);
+        let minuteAcc = 0;
+        let connected = false;
+        let logCleared = false;
+
+        // ── CHART SETUP ───────────────────────────────────────
+        const mono = "'JetBrains Mono', monospace";
+        const textC = '#94a3b8',
+            gridC = 'rgba(255,255,255,0.05)';
+
+        const base = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    titleFont: {
+                        family: mono,
+                        size: 11
+                    },
+                    bodyFont: {
+                        family: mono,
+                        size: 11
+                    }
+                }
+            }
+        };
+
+        // Time chart
+        const timeChart = new Chart(document.getElementById('timeChart'), {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{
+                    data: [...timeData],
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0,255,136,0.06)',
+                    borderWidth: 1.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {...base,
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            },
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: gridC
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Split donut
+        const splitChart = new Chart(document.getElementById('splitChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Gesture', 'Voice'],
+                datasets: [{
+                    data: [1, 1],
+                    backgroundColor: ['#00ff88', '#38bdf8'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                ...base,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 11
+                            },
+                            boxWidth: 10,
+                            padding: 12
+                        }
+                    },
+                    tooltip: base.plugins.tooltip
+                }
+            }
+        });
+
+        // Gesture bar
+        const gestChart = new Chart(document.getElementById('gestChart'), {
+            type: 'bar',
+            data: {
+                labels: ['T.Up', 'T.Dn', 'Fist', '2F', '3F', '4F', 'Rock', 'Open'],
+                datasets: [{
+                    data: [0, 0, 0, 0, 0, 0, 0, 0],
+                    backgroundColor: '#00ff8888',
+                    borderRadius: 4
+                }]
+            },
+            options: {...base,
+                scales: {
+                    x: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: gridC
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            },
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: gridC
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Action bar (horizontal)
+        const actionChart = new Chart(document.getElementById('actionChart'), {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: '#fbbf2488',
+                    borderRadius: 4
+                }]
+            },
+            options: {...base,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            },
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: gridC
+                        },
+                        beginAtZero: true
+                    },
+                    y: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'transparent'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Voice bar
+        const voiceChart = new Chart(document.getElementById('voiceChart'), {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: '#38bdf888',
+                    borderRadius: 4
+                }]
+            },
+            options: {...base,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            },
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: gridC
+                        },
+                        beginAtZero: true
+                    },
+                    y: {
+                        ticks: {
+                            color: textC,
+                            font: {
+                                family: mono,
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'transparent'
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── TIME TICK ─────────────────────────────────────────
+        setInterval(() => {
+            timeData.shift();
+            timeData.push(minuteAcc);
+            document.getElementById('rate-label').textContent = minuteAcc + '/5s';
+            minuteAcc = 0;
+            timeChart.data.datasets[0].data = [...timeData];
+            timeChart.update('none');
+        }, 5000);
+
+        // ── PROCESS ONE EVENT ─────────────────────────────────
+        function processEvent(ev, isNew) {
+            const isGesture = ev.source === 'gesture';
+            if (isGesture) {
+                gestCount++;
+            } else {
+                voiceCount++;
+            }
+            if (isNew) minuteAcc++;
+
+            const action = (ev.action || '').toUpperCase();
+            const cmd = (ev.source === 'voice' ? ev.source_cmd || ev.action : ev.action) || '';
+
+            actionFreq[action] = (actionFreq[action] || 0) + 1;
+            if (isGesture) gestFreq[ev.source_cmd || ev.action] = (gestFreq[ev.source_cmd || ev.action] || 0) + 1;
+            else voiceFreq[cmd] = (voiceFreq[cmd] || 0) + 1;
+
+            // Metrics
+            const total = gestCount + voiceCount;
+            document.getElementById('m-total').textContent = total;
+            document.getElementById('m-gest').textContent = gestCount;
+            document.getElementById('m-voice').textContent = voiceCount;
+
+            const top = Object.entries(actionFreq).sort((a, b) => b[1] - a[1])[0];
+            if (top) document.getElementById('m-top').textContent = top[0].replace(/_/g, ' ').toLowerCase();
+
+            // Split chart
+            splitChart.data.datasets[0].data = [gestCount, voiceCount];
+            splitChart.update('none');
+
+            // Gesture chart
+            const gKeys = ['THUMBS_UP', 'THUMBS_DOWN', 'FIST', 'TWO_FINGERS', 'THREE_FINGERS', 'FOUR_FINGERS', 'ROCK', 'OPEN_HAND'];
+            gestChart.data.datasets[0].data = gKeys.map(k => gestFreq[k] || 0);
+            gestChart.update('none');
+
+            // Action chart (top 5)
+            const topActions = Object.entries(actionFreq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            actionChart.data.labels = topActions.map(([k]) => k.replace(/_/g, ' ').toLowerCase());
+            actionChart.data.datasets[0].data = topActions.map(([, v]) => v);
+            actionChart.update('none');
+
+            // Voice chart (top 5)
+            const topVoice = Object.entries(voiceFreq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            voiceChart.data.labels = topVoice.map(([k]) => k.toLowerCase());
+            voiceChart.data.datasets[0].data = topVoice.map(([, v]) => v);
+            voiceChart.update('none');
+
+            // Log
+            if (isNew && !logCleared) addLog(ev);
+        }
+
+        function addLog(ev) {
+            const list = document.getElementById('logList');
+            const empty = list.querySelector('.empty');
+            if (empty) empty.remove();
+
+            const isGesture = ev.source === 'gesture';
+            const t = new Date().toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const item = document.createElement('div');
+            item.className = 'log-item';
+            item.innerHTML = `
+    <span class="log-time">${t}</span>
+    <span class="badge ${isGesture?'badge-g':'badge-v'}">${isGesture?'GESTURE':'VOICE'}</span>
+    <span class="log-msg"><b>${(ev.source_cmd||ev.action||'').toUpperCase()}</b> → ${ev.result||''}</span>
+  `;
+            list.insertBefore(item, list.firstChild);
+            if (list.children.length > 60) list.removeChild(list.lastChild);
+        }
+
+        function clearLog() {
+            document.getElementById('logList').innerHTML = '';
+            logCleared = false;
+        }
+
+        // ── FLASK POLLING ─────────────────────────────────────
+        async function fetchEvents() {
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/events', {
+                    cache: 'no-store'
+                });
+                if (!res.ok) throw new Error('bad status');
+                const events = await res.json();
+
+                if (!connected) {
+                    connected = true;
+                    document.getElementById('conn-dot').className = 'dot dot-green';
+                    document.getElementById('conn-text').textContent = 'Connected';
+                    document.getElementById('last-update-pill').style.display = 'flex';
+                    document.getElementById('err-banner').style.display = 'none';
+                }
+
+                let hasNew = false;
+                events.forEach((ev, i) => {
+                    // unique id: use index + source + action combo as key
+                    const id = `${ev.ts||i}_${ev.source}_${ev.action}`;
+                    if (!seenIds.has(id)) {
+                        seenIds.add(id);
+                        processEvent(ev, true);
+                        hasNew = true;
+                    }
+                });
+
+                document.getElementById('last-update').textContent =
+                    'last: ' + new Date().toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+
+            } catch (e) {
+                if (connected || !connected) {
+                    connected = false;
+                    document.getElementById('conn-dot').className = 'dot dot-red';
+                    document.getElementById('conn-text').textContent = 'Disconnected';
+                    document.getElementById('err-banner').style.display = 'block';
+                }
+            }
+        }
+
+        // Har 2 second mein real data fetch karo
+        setInterval(fetchEvents, 2000);
+        fetchEvents(); // turant bhi ek baar
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Touchless TV Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>📺 Touchless TV Control</h1>
+        <p class="subtitle">Control your TV &amp; PC with Voice and Hand Gestures</p>
+    </header>
+
+    <!-- ── Mode toggles ──────────────────────────────────────────────── -->
+    <section class="mode-bar">
+        <button id="btn-voice" class="mode-btn" onclick="toggleVoice()">
+        <span class="mode-icon">🎤</span>
+        <span class="btn-label">Voice: OFF</span>
+        <span id="dot-voice" class="dot"></span>
+    </button>
+        <button id="btn-gesture" class="mode-btn" onclick="toggleGesture()">
+        <span class="mode-icon">✋</span>
+        <span class="btn-label">Gesture: OFF</span>
+        <span id="dot-gesture" class="dot"></span>
+    </button>
+        <button id="btn-cursor" class="mode-btn" onclick="toggleCursorMode()">
+        <span class="mode-icon">🖱</span>
+        🖱 Cursor Mode: OFF
+    </button>
+    </section>
+
+    <div class="hint">
+        💡 Enable Voice, Gesture, or both simultaneously. Cursor Mode lets your finger move the mouse.
+    </div>
+
+    <!-- ── Last command ───────────────────────────────────────────────── -->
+    <div class="last-cmd-box">
+        <div class="last-cmd-title">Last Command</div>
+        <div id="last-command" class="last-cmd">Waiting…</div>
+    </div>
+
+    <!-- ── Camera feed ────────────────────────────────────────────────── -->
+    <div id="camera-box" style="display:none">
+        <div class="cam-wrap">
+            <video id="gesture-video" autoplay playsinline style="display:none"></video>
+            <canvas id="gesture-canvas" width="320" height="240"></canvas>
+            <div class="gesture-tag">
+                <span id="gesture-name">—</span>
+            </div>
+            <div class="cursor-tag" id="cursor-pos"></div>
+        </div>
+    </div>
+
+    <!-- ── Panels ─────────────────────────────────────────────────────── -->
+    <div class="panels">
+
+        <div class="panel">
+            <div class="panel-title">⚡ Power</div>
+            <div class="btn-grid">
+                <button class="cmd-btn red" onclick="quickCmd('TV_POWER_OFF')">Power Off</button>
+                <button class="cmd-btn green" onclick="quickCmd('TV_POWER_ON')">Power On</button>
+                <button class="cmd-btn" onclick="quickCmd('STANDBY')">Standby</button>
+                <button class="cmd-btn" onclick="quickCmd('SLEEP_TIMER')">Sleep Timer</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🔊 Volume</div>
+            <div class="btn-grid">
+                <button class="cmd-btn" onclick="quickCmd('VOLUME_UP')">🔊 Vol Up</button>
+                <button class="cmd-btn" onclick="quickCmd('VOLUME_DOWN')">🔉 Vol Down</button>
+                <button class="cmd-btn" onclick="quickCmd('MUTE')">🔇 Mute</button>
+                <button class="cmd-btn" onclick="quickCmd('UNMUTE')">🔈 Unmute</button>
+                <button class="cmd-btn" onclick="quickCmd('VOLUME_MAX')">Max Vol</button>
+                <button class="cmd-btn" onclick="quickCmd('VOLUME_MIN')">Min Vol</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">📡 Channels</div>
+            <div class="btn-grid">
+                <button class="cmd-btn" onclick="quickCmd('CHANNEL_UP')">Ch Up ▲</button>
+                <button class="cmd-btn" onclick="quickCmd('CHANNEL_DOWN')">Ch Down ▼</button>
+                <button class="cmd-btn" onclick="quickCmd('CHANNEL_LAST')">Last Ch</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">▶ Playback</div>
+            <div class="btn-grid">
+                <button class="cmd-btn" onclick="quickCmd('PLAY')">▶ Play</button>
+                <button class="cmd-btn" onclick="quickCmd('PAUSE')">⏸ Pause</button>
+                <button class="cmd-btn" onclick="quickCmd('NEXT')">⏭ Next</button>
+                <button class="cmd-btn" onclick="quickCmd('PREVIOUS')">⏮ Prev</button>
+                <button class="cmd-btn" onclick="quickCmd('FAST_FORWARD')">⏩ FF</button>
+                <button class="cmd-btn" onclick="quickCmd('REWIND')">⏪ Rewind</button>
+                <button class="cmd-btn" onclick="quickCmd('FULLSCREEN')">⛶ Fullscreen</button>
+                <button class="cmd-btn" onclick="quickCmd('SUBTITLE')">💬 Subtitle</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🕹 Navigation</div>
+            <div class="dpad">
+                <div></div>
+                <button class="cmd-btn dpad-btn" onclick="quickCmd('NAV_UP')">▲</button>
+                <div></div>
+                <button class="cmd-btn dpad-btn" onclick="quickCmd('NAV_LEFT')">◀</button>
+                <button class="cmd-btn dpad-btn ok" onclick="quickCmd('SELECT')">OK</button>
+                <button class="cmd-btn dpad-btn" onclick="quickCmd('NAV_RIGHT')">▶</button>
+                <div></div>
+                <button class="cmd-btn dpad-btn" onclick="quickCmd('NAV_DOWN')">▼</button>
+                <div></div>
+            </div>
+            <div class="btn-grid" style="margin-top:10px">
+                <button class="cmd-btn" onclick="quickCmd('BACK')">↩ Back</button>
+                <button class="cmd-btn" onclick="quickCmd('HOME')">🏠 Home</button>
+                <button class="cmd-btn" onclick="quickCmd('MENU')">☰ Menu</button>
+                <button class="cmd-btn" onclick="quickCmd('EXIT')">✕ Exit</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🖱 Mouse Control</div>
+            <div class="btn-grid">
+                <button class="cmd-btn" onclick="quickCmd('CLICK')">👆 Click</button>
+                <button class="cmd-btn" onclick="quickCmd('DOUBLE_CLICK')">👆👆 Double Click</button>
+                <button class="cmd-btn" onclick="quickCmd('RIGHT_CLICK')">👆 Right Click</button>
+                <button class="cmd-btn" onclick="quickCmd('SCROLL_UP')">⬆ Scroll Up</button>
+                <button class="cmd-btn" onclick="quickCmd('SCROLL_DOWN')">⬇ Scroll Down</button>
+                <button class="cmd-btn" onclick="quickCmd('ZOOM_IN')">🔍+ Zoom In</button>
+                <button class="cmd-btn" onclick="quickCmd('ZOOM_OUT')">🔍- Zoom Out</button>
+                <button class="cmd-btn" onclick="quickCmd('SCREENSHOT')">📸 Screenshot</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">⚙ Smart Features</div>
+            <div class="btn-grid">
+                <button class="cmd-btn" onclick="quickCmd('SEARCH')">🔍 Search</button>
+                <button class="cmd-btn" onclick="quickCmd('SCREEN_MIRROR')">📡 Mirror</button>
+                <button class="cmd-btn" onclick="quickCmd('RECORD')">⏺ Record</button>
+                <button class="cmd-btn" onclick="quickCmd('PICTURE_MODE')">🖼 Picture</button>
+                <button class="cmd-btn" onclick="quickCmd('GAME_MODE')">🎮 Game Mode</button>
+                <button class="cmd-btn" onclick="quickCmd('CINEMA_MODE')">🎬 Cinema</button>
+                <button class="cmd-btn" onclick="quickCmd('NIGHT_MODE')">🌙 Night</button>
+                <button class="cmd-btn" onclick="quickCmd('BLUETOOTH')">📶 Bluetooth</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🔌 Input Source</div>
+            <div class="btn-grid">
+                <button class="cmd-btn" onclick="quickCmd('HDMI_1')">HDMI 1</button>
+                <button class="cmd-btn" onclick="quickCmd('HDMI_2')">HDMI 2</button>
+                <button class="cmd-btn" onclick="quickCmd('HDMI_3')">HDMI 3</button>
+                <button class="cmd-btn" onclick="quickCmd('USB')">USB</button>
+                <button class="cmd-btn" onclick="quickCmd('SOURCE')">Source ⇄</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">📱 Apps</div>
+            <div class="btn-grid">
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_YOUTUBE')">▶ YouTube</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_NETFLIX')">N Netflix</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_AMAZON')">🎬 Prime</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_DISNEY')">✨ Disney+</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_HOTSTAR')">⭐ Hotstar</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_SPOTIFY')">🎵 Spotify</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_HULU')">📺 Hulu</button>
+                <button class="cmd-btn app" onclick="quickCmd('OPEN_BROWSER')">🌐 Browser</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Gesture guide ──────────────────────────────────────────────── -->
+    <div class="gesture-guide">
+        <div class="guide-title">✋ Gesture Guide — hold each gesture steady for ~0.5s</div>
+        <div class="guide-grid">
+            <div class="guide-item"><span class="g-icon">✊</span><span>Fist → Select/OK</span></div>
+            <div class="guide-item"><span class="g-icon">✋</span><span>Open Hand → Pause</span></div>
+            <div class="guide-item"><span class="g-icon">👍</span><span>Thumbs Up → Volume Up</span></div>
+            <div class="guide-item"><span class="g-icon">👎</span><span>Thumbs Down → Volume Down</span></div>
+            <div class="guide-item"><span class="g-icon">✌</span><span>Two Fingers → YouTube</span></div>
+            <div class="guide-item"><span class="g-icon">🤟</span><span>Rock Sign → Back</span></div>
+            <div class="guide-item"><span class="g-icon">👆</span><span>Pointing → Move Cursor</span></div>
+            <div class="guide-item"><span class="g-icon">🤏</span><span>Pinch → Click / Mute</span></div>
+        </div>
+    </div>
+
+    <!-- ── Voice guide ────────────────────────────────────────────────── -->
+    <div class="gesture-guide">
+        <div class="guide-title">🎤 Voice Commands — speak clearly after enabling voice</div>
+        <div class="guide-grid">
+            <div class="guide-item"><span class="g-icon">🔊</span><span>"Volume up / down"</span></div>
+            <div class="guide-item"><span class="g-icon">🔇</span><span>"Mute / Unmute"</span></div>
+            <div class="guide-item"><span class="g-icon">📡</span><span>"Channel up / down"</span></div>
+            <div class="guide-item"><span class="g-icon">▶</span><span>"Play / Pause / Next"</span></div>
+            <div class="guide-item"><span class="g-icon">⏩</span><span>"Fast forward / Rewind"</span></div>
+            <div class="guide-item"><span class="g-icon">🏠</span><span>"Home / Back / Menu"</span></div>
+            <div class="guide-item"><span class="g-icon">📺</span><span>"Open YouTube / Netflix"</span></div>
+            <div class="guide-item"><span class="g-icon">🎮</span><span>"Game mode / Cinema mode"</span></div>
+            <div class="guide-item"><span class="g-icon">🔌</span><span>"HDMI 1 / HDMI 2"</span></div>
+            <div class="guide-item"><span class="g-icon">📸</span><span>"Screenshot / Search"</span></div>
+            <div class="guide-item"><span class="g-icon">⚡</span><span>"Turn off TV / Standby"</span></div>
+            <div class="guide-item"><span class="g-icon">⛶</span><span>"Fullscreen / Subtitle"</span></div>
+        </div>
+    </div>
+
+    <!-- ── Log ───────────────────────────────────────────────────────── -->
+    <div class="log-box">
+        <div class="log-title">📋 Activity Log</div>
+        <div id="log"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <!-- ✅ Socket.IO SABSE PEHLE -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script src="tts.js"></script>
+    <script src="services-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
